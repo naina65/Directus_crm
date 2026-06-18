@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -18,7 +19,7 @@
                 <p class="text-gray-400 mt-1">अपनी टीम के लिए स्मार्ट तरीके से कैंडिडेट्स को शॉर्टलिस्ट करें।</p>
             </div>
             <span class="bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 px-3 py-1 rounded-full text-sm font-semibold">
-                <i class="fa-solid fa-circle text-xs mr-1.5 animate-pulse"></i> Backend Ready
+                <i class="fa-solid fa-circle text-xs mr-1.5 animate-pulse"></i> Backend Connected
             </span>
         </header>
 
@@ -32,7 +33,7 @@
                     <textarea id="jobDesc" rows="4" required class="w-full bg-gray-800 text-white border border-gray-700 rounded p-3 focus:ring-2 focus:ring-emerald-500" placeholder="Job Description..."></textarea>
                     <input type="file" id="resumeFile" accept=".pdf" required class="w-full text-sm text-gray-400 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:bg-emerald-600 file:text-white cursor-pointer">
                     <p id="parserStatus" class="text-xs text-gray-500"></p>
-                    <button type="submit" id="submitBtn" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3 rounded-lg">Run AI Matcher</button>
+                    <button type="submit" id="submitBtn" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3 rounded-lg transition-all">Run AI Matcher</button>
                 </form>
             </div>
 
@@ -40,29 +41,33 @@
                 <h2 class="text-xl font-semibold text-white mb-4 border-b border-gray-800 pb-2">
                     <i class="fa-solid fa-users mr-2 text-emerald-400"></i>Active Pipeline
                 </h2>
-                <table class="w-full text-left">
-                    <thead>
-                        <tr class="text-emerald-400 border-b border-gray-800">
-                            <th class="pb-3">Candidate</th>
-                            <th class="pb-3">Match Score</th>
-                            <th class="pb-3">Status</th>
-                            <th class="pb-3 text-right">Action</th>
-                        </tr>
-                    </thead>
-                    <tbody id="candidateList">
-                        <tr id="emptyState"><td colspan="4" class="py-8 text-center text-gray-500">कोई डेटा उपलब्ध नहीं है।</td></tr>
-                    </tbody>
-                </table>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left">
+                        <thead>
+                            <tr class="text-emerald-400 border-b border-gray-800">
+                                <th class="pb-3">Candidate</th>
+                                <th class="pb-3">Match Score</th>
+                                <th class="pb-3">Status</th>
+                                <th class="pb-3 text-right">Action</th>
+                            </tr>
+                        </thead>
+                        <tbody id="candidateList">
+                            <tr id="emptyState"><td colspan="4" class="py-8 text-center text-gray-500">कोई डेटा उपलब्ध नहीं है।</td></tr>
+                        </tbody>
+                    </table>
+                </div>
             </div>
         </div>
     </div>
 
     <script>
+        // कॉन्फ़िगरेशन
+        const BACKEND_URL = "https://directus-crm.onrender.com";
         pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.worker.min.js';
-        const BACKEND_URL = "http://localhost:8000"; 
+        
         let extractedResumeText = "";
 
-        // PDF Parsing Logic
+        // 1. PDF Parsing
         document.getElementById('resumeFile').addEventListener('change', async (e) => {
             const file = e.target.files[0];
             const status = document.getElementById('parserStatus');
@@ -73,22 +78,29 @@
                 let text = "";
                 for (let i = 1; i <= pdf.numPages; i++) {
                     const page = await pdf.getPage(i);
-                    text += (await page.getTextContent()).items.map(it => it.str).join(" ");
+                    const content = await page.getTextContent();
+                    text += content.items.map(it => it.str).join(" ");
                 }
                 extractedResumeText = text;
                 status.innerText = "✅ Resume Loaded";
                 status.style.color = "#10b981";
-            } catch (e) { status.innerText = "❌ Error Parsing"; }
+            } catch (e) { 
+                status.innerText = "❌ Error Parsing";
+                status.style.color = "#ef4444";
+            }
         });
 
-        // Form Submit & API Logic
+        // 2. Form Submission
         document.getElementById('uploadForm').addEventListener('submit', async (e) => {
             e.preventDefault();
             const name = document.getElementById('candName').value;
             const jd = document.getElementById('jobDesc').value;
-            
             const btn = document.getElementById('submitBtn');
-            btn.disabled = true; btn.innerText = "Matching...";
+            
+            if (!extractedResumeText) return alert("कृपया पहले PDF अपलोड करें!");
+
+            btn.disabled = true; 
+            btn.innerText = "Calculating Match...";
 
             try {
                 const res = await fetch(`${BACKEND_URL}/api/match`, {
@@ -96,22 +108,27 @@
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ job_description: jd, resume_text: extractedResumeText })
                 });
+                
                 const data = await res.json();
+                
                 if(data.success) {
                     document.getElementById('emptyState')?.remove();
                     const list = document.getElementById('candidateList');
                     list.insertAdjacentHTML('afterbegin', `
-                        <tr class="border-b border-gray-800">
-                            <td class="py-4">${name}</td>
-                            <td class="py-4"><span class="bg-emerald-900 text-emerald-300 px-2 py-1 rounded">${data.match_percentage}%</span></td>
-                            <td class="py-4"><select class="bg-gray-800 text-sm p-1 rounded"><option>Applied</option><option>Shortlisted</option></select></td>
-                            <td class="py-4 text-right"><button onclick="window.open('https://calendar.google.com/')" class="text-emerald-400 underline">Book Call</button></td>
+                        <tr class="border-b border-gray-800 animate-fadeIn">
+                            <td class="py-4 font-semibold">${name}</td>
+                            <td class="py-4"><span class="bg-emerald-900 text-emerald-300 px-3 py-1 rounded-full text-sm">${data.match_percentage}%</span></td>
+                            <td class="py-4"><select class="bg-gray-800 text-sm p-1 rounded border border-gray-700"><option>Applied</option><option>Shortlisted</option></select></td>
+                            <td class="py-4 text-right"><button onclick="window.open('https://calendar.google.com/')" class="text-emerald-400 hover:text-emerald-300 text-sm font-semibold">Book Call</button></td>
                         </tr>
                     `);
                     document.getElementById('uploadForm').reset();
                 }
             } catch (err) { alert("Backend से संपर्क नहीं हो पाया।"); }
-            finally { btn.disabled = false; btn.innerText = "Run AI Matcher"; }
+            finally { 
+                btn.disabled = false; 
+                btn.innerText = "Run AI Matcher"; 
+            }
         });
     </script>
 </body>
