@@ -3,237 +3,116 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Team AI Recruiter CRM</title>
-    <!-- Tailwind CSS for Premium Dark UI -->
+    <title>AI Team Recruiter CRM</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-    <!-- PDF.js for parsing PDF Resumes in frontend -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js"></script>
 </head>
 <body class="bg-gray-950 text-gray-100 min-h-screen font-sans">
     <div class="container mx-auto px-6 py-8">
-        <!-- Header -->
         <header class="border-b border-gray-800 pb-5 mb-8 flex justify-between items-center">
             <div>
                 <h1 class="text-3xl font-bold text-emerald-400">
                     <i class="fa-solid fa-robot mr-3"></i>AI Team Recruiter CRM
                 </h1>
-                <p class="text-gray-400 mt-1">Apni team ke liye zero-cost par resumes match karein aur interview schedule karein.</p>
+                <p class="text-gray-400 mt-1">अपनी टीम के लिए स्मार्ट तरीके से कैंडिडेट्स को शॉर्टलिस्ट करें।</p>
             </div>
             <span class="bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 px-3 py-1 rounded-full text-sm font-semibold">
-                <i class="fa-solid fa-circle text-xs mr-1.5 animate-pulse"></i> Local Backend Connected
+                <i class="fa-solid fa-circle text-xs mr-1.5 animate-pulse"></i> Backend Ready
             </span>
         </header>
 
-        <!-- Main Workspace -->
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
-            <!-- Left Panel: Input & Matcher -->
             <div class="bg-gray-900 p-6 rounded-xl border border-gray-800 h-fit space-y-5">
                 <h2 class="text-xl font-semibold text-white mb-2 border-b border-gray-800 pb-2">
-                    <i class="fa-solid fa-file-arrow-up mr-2 text-emerald-400"></i>Add & Match Candidate
+                    <i class="fa-solid fa-file-arrow-up mr-2 text-emerald-400"></i>Add Candidate
                 </h2>
                 <form id="uploadForm" class="space-y-4">
-                    <div>
-                        <label class="block text-sm text-gray-400 mb-1">Candidate Name</label>
-                        <!-- CHANGED: Added bg-gray-100, text-black, and font-semibold for typing visibility -->
-                        <input type="text" id="candName" required class="w-full bg-gray-100 text-black border border-gray-700 rounded p-2.5 focus:outline-none focus:ring-2 focus:ring-emerald-400 font-semiboldplaceholder-gray-500" placeholder="e.g. Amit Kumar">
-                    </div>
-                    <div>
-                        <label class="block text-sm text-gray-400 mb-1">Job Description (JD)</label>
-                        <!-- CHANGED: Added bg-gray-100, text-black, and font-semibold for typing visibility -->
-                        <textarea id="jobDesc" rows="4" required class="w-full bg-gray-100 text-black border border-gray-700 rounded p-2.5 focus:outline-none focus:ring-2 focus:ring-emerald-400 font-semibold placeholder-gray-500" placeholder="Paste target job description here..."></textarea>
-                    </div>
-                    <div>
-                        <label class="block text-sm text-gray-400 mb-1">Upload PDF Resume</label>
-                        <input type="file" id="resumeFile" accept=".pdf" required class="w-full text-sm text-gray-400 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-emerald-400/10 file:text-emerald-400 hover:file:bg-emerald-400/20 cursor-pointer">
-                        <p id="parserStatus" class="text-xs text-gray-500 mt-1"></p>
-                    </div>
-                    <button type="submit" id="submitBtn" class="w-full bg-emerald-500 hover:bg-emerald-600 text-white font-bold py-3 rounded-lg transition-all duration-200">
-                        Run AI Matcher
-                    </button>
+                    <input type="text" id="candName" required class="w-full bg-gray-800 text-white border border-gray-700 rounded p-3 focus:ring-2 focus:ring-emerald-500" placeholder="Candidate Name">
+                    <textarea id="jobDesc" rows="4" required class="w-full bg-gray-800 text-white border border-gray-700 rounded p-3 focus:ring-2 focus:ring-emerald-500" placeholder="Job Description..."></textarea>
+                    <input type="file" id="resumeFile" accept=".pdf" required class="w-full text-sm text-gray-400 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:bg-emerald-600 file:text-white cursor-pointer">
+                    <p id="parserStatus" class="text-xs text-gray-500"></p>
+                    <button type="submit" id="submitBtn" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3 rounded-lg">Run AI Matcher</button>
                 </form>
             </div>
 
-            <!-- Right Panel: Live Pipeline Table -->
             <div class="lg:col-span-2 bg-gray-900 p-6 rounded-xl border border-gray-800">
                 <h2 class="text-xl font-semibold text-white mb-4 border-b border-gray-800 pb-2">
-                    <i class="fa-solid fa-users mr-2 text-emerald-400"></i>Active Candidate Pipeline
+                    <i class="fa-solid fa-users mr-2 text-emerald-400"></i>Active Pipeline
                 </h2>
-                <div class="overflow-x-auto">
-                    <table class="w-full text-left">
-                        <thead>
-                            <tr class="border-b border-gray-800 text-emerald-400">
-                                <th class="pb-3 font-medium">Candidate</th>
-                                <th class="pb-3 font-medium">Match Score</th>
-                                <th class="pb-3 font-medium">Interview Status</th>
-                                <th class="pb-3 font-medium text-right">Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody id="candidateList" class="divide-y divide-gray-800/50">
-                            <!-- Temporary state if empty -->
-                            <tr id="emptyState">
-                                <td colspan="4" class="py-8 text-center text-gray-500">
-                                    <i class="fa-solid fa-folder-open text-3xl mb-2 block"></i>
-                                    Abhi koi candidates matched nahi hain. Left side se shuru karein.
-                                </td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </div>
+                <table class="w-full text-left">
+                    <thead>
+                        <tr class="text-emerald-400 border-b border-gray-800">
+                            <th class="pb-3">Candidate</th>
+                            <th class="pb-3">Match Score</th>
+                            <th class="pb-3">Status</th>
+                            <th class="pb-3 text-right">Action</th>
+                        </tr>
+                    </thead>
+                    <tbody id="candidateList">
+                        <tr id="emptyState"><td colspan="4" class="py-8 text-center text-gray-500">कोई डेटा उपलब्ध नहीं है।</td></tr>
+                    </tbody>
+                </table>
             </div>
         </div>
     </div>
 
     <script>
-        // PDF.js worker setup
         pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.worker.min.js';
-
-        // Local backend running url
         const BACKEND_URL = "http://localhost:8000"; 
         let extractedResumeText = "";
 
-        // Function: Resume PDF se text read karne ke liye (Frontend-side Parsing)
+        // PDF Parsing Logic
         document.getElementById('resumeFile').addEventListener('change', async (e) => {
             const file = e.target.files[0];
-            const statusText = document.getElementById('parserStatus');
+            const status = document.getElementById('parserStatus');
             if (!file) return;
-
-            statusText.innerText = "⏳ Parsing Resume PDF...";
-            statusText.className = "text-xs text-yellow-500 mt-1";
-
+            status.innerText = "⏳ Parsing PDF...";
             try {
-                const arrayBuffer = await file.arrayBuffer();
-                const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+                const pdf = await pdfjsLib.getDocument(await file.arrayBuffer()).promise;
                 let text = "";
-                
                 for (let i = 1; i <= pdf.numPages; i++) {
                     const page = await pdf.getPage(i);
-                    const tokenized = await page.getTextContent();
-                    const pageText = tokenized.items.map(item => item.str).join(" ");
-                    text += pageText + "\n";
+                    text += (await page.getTextContent()).items.map(it => it.str).join(" ");
                 }
-                
                 extractedResumeText = text;
-                statusText.innerText = "✅ Resume read successfully!";
-                statusText.className = "text-xs text-emerald-400 mt-1";
-            } catch (err) {
-                console.error(err);
-                statusText.innerText = "❌ PDF parse karne mein dikkat aayi. Dusra format try karein.";
-                statusText.className = "text-xs text-red-500 mt-1";
-            }
+                status.innerText = "✅ Resume Loaded";
+                status.style.color = "#10b981";
+            } catch (e) { status.innerText = "❌ Error Parsing"; }
         });
 
-        // Form Submit hone par Matching triggers
+        // Form Submit & API Logic
         document.getElementById('uploadForm').addEventListener('submit', async (e) => {
             e.preventDefault();
-            
             const name = document.getElementById('candName').value;
             const jd = document.getElementById('jobDesc').value;
-            const submitBtn = document.getElementById('submitBtn');
-
-            if (!extractedResumeText) {
-                alert("Pehle resume PDF processing hone dein.");
-                return;
-            }
-
-            submitBtn.innerText = "Calculating Match...";
-            submitBtn.disabled = true;
+            
+            const btn = document.getElementById('submitBtn');
+            btn.disabled = true; btn.innerText = "Matching...";
 
             try {
-                // Post request to our Local Python Backend
-                const response = await fetch(`${BACKEND_URL}/api/match`, {
+                const res = await fetch(`${BACKEND_URL}/api/match`, {
                     method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({
-                        job_description: jd,
-                        resume_text: extractedResumeText
-                    })
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ job_description: jd, resume_text: extractedResumeText })
                 });
-                
-                const data = await response.json();
-                
-                if (data.success) {
-                    addCandidateToTable(name, data.match_percentage);
+                const data = await res.json();
+                if(data.success) {
+                    document.getElementById('emptyState')?.remove();
+                    const list = document.getElementById('candidateList');
+                    list.insertAdjacentHTML('afterbegin', `
+                        <tr class="border-b border-gray-800">
+                            <td class="py-4">${name}</td>
+                            <td class="py-4"><span class="bg-emerald-900 text-emerald-300 px-2 py-1 rounded">${data.match_percentage}%</span></td>
+                            <td class="py-4"><select class="bg-gray-800 text-sm p-1 rounded"><option>Applied</option><option>Shortlisted</option></select></td>
+                            <td class="py-4 text-right"><button onclick="window.open('https://calendar.google.com/')" class="text-emerald-400 underline">Book Call</button></td>
+                        </tr>
+                    `);
                     document.getElementById('uploadForm').reset();
-                    extractedResumeText = "";
-                    document.getElementById('parserStatus').innerText = "";
-                } else {
-                    alert("AI Matching calculation failed.");
                 }
-            } catch (err) {
-                alert("Error: Backend AI engine se connection nahi ho paya. Check karein ki terminal par Python Server chal raha hai.");
-                console.error(err);
-            } finally {
-                submitBtn.innerText = "Run AI Matcher";
-                submitBtn.disabled = false;
-            }
+            } catch (err) { alert("Backend से संपर्क नहीं हो पाया।"); }
+            finally { btn.disabled = false; btn.innerText = "Run AI Matcher"; }
         });
-
-        // Function: Result ko Table (Dashboard) mein update karna
-        function addCandidateToTable(name, matchScore) {
-            // Remove Empty state placeholder if present
-            const emptyState = document.getElementById('emptyState');
-            if (emptyState) emptyState.remove();
-
-            const list = document.getElementById('candidateList');
-            
-            // Set dynamic color of percentage badge
-            let scoreColor = "text-red-400 bg-red-400/10 border-red-500/20";
-            if (matchScore >= 75) {
-                scoreColor = "text-emerald-400 bg-emerald-400/10 border-emerald-500/20";
-            } else if (matchScore >= 50) {
-                scoreColor = "text-yellow-400 bg-yellow-400/10 border-yellow-500/20";
-            }
-
-            const rowId = 'candidate_' + Date.now();
-            
-            const row = `
-                <tr id="${rowId}" class="hover:bg-gray-900/50 transition">
-                    <td class="py-4 font-semibold text-white flex flex-col">
-                        <span>${name}</span>
-                        <span class="text-xs text-gray-500 font-normal">Added just now</span>
-                    </td>
-                    <td class="py-4">
-                        <span class="border px-3 py-1 rounded-full font-bold text-sm ${scoreColor}">
-                            ${matchScore}% Match
-                        </span>
-                    </td>
-                    <td class="py-4">
-                        <select onchange="updateStatusColor('${rowId}', this.value)" class="bg-gray-800 border border-gray-700 text-xs text-gray-300 rounded p-1.5 focus:outline-none focus:border-emerald-400">
-                            <option value="Applied">Applied</option>
-                            <option value="Shortlisted">Shortlisted</option>
-                            <option value="Interview Scheduled">Interview Scheduled</option>
-                            <option value="Rejected">Rejected</option>
-                        </select>
-                    </td>
-                    <td class="py-4 text-right">
-                        <button onclick="scheduleInterview('${name}')" class="bg-gray-800 hover:bg-emerald-500 border border-gray-750 text-xs text-white px-3 py-1.5 rounded-lg transition duration-200">
-                            <i class="fa-solid fa-calendar-days mr-1"></i> Book Call
-                        </button>
-                    </td>
-                </tr>
-            `;
-            list.insertAdjacentHTML('afterbegin', row);
-        }
-
-        // Dropdown changes visual update helper
-        function updateStatusColor(rowId, val) {
-            const row = document.getElementById(rowId);
-            if (val === "Rejected") {
-                row.style.opacity = "0.5";
-            } else {
-                row.style.opacity = "1";
-            }
-        }
-
-        // Open free Google Calendar setup link for selected candidate
-        function scheduleInterview(name) {
-            const eventTitle = `Interview: ${name} (Recruitment CRM)`;
-            const gCalUrl = `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent(eventTitle)}&details=Discussion+regarding+role+and+resume+matching+score.`;
-            window.open(gCalUrl, '_blank');
-        }
     </script>
 </body>
 </html>
