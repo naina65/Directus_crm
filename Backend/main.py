@@ -1,13 +1,19 @@
 # main.py - Pure-Python Mathematically Optimized AI CRM Backend with Auto-Port Fallback
-
+import os
+from openai import OpenAI
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
+from fastapi.responses import FileResponse
 from pydantic import BaseModel
 from collections import Counter
 import math
 import re
 import socket
 import uvicorn
+
+api_key = os.getenv("OPENAI_API_KEY")
+client = OpenAI(api_key=api_key) 
 
 app = FastAPI(title="AI Recruitment Matcher Pure-Python v3")
 
