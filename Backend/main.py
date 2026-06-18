@@ -116,14 +116,5 @@ def find_free_port(start_port: int = 8000) -> int:
                 port += 1
 
 if __name__ == "__main__":
-    target_port = find_free_port(8000)
-    if target_port != 8000:
-        print("\n" + "="*70)
-        print(f"⚠️ WARNING: Port 8000 busy thi! Automatic Port {target_port} par shift ho gaya hai.")
-        print(f"Apni frontend index.html file mein 'BACKEND_URL' ko badalkar:")
-        print(f"const BACKEND_URL = \"http://localhost:{target_port}\";")
-        print("="*70 + "\n")
-        
-    # Reload false rakhenge taaki Windows OneDrive par process hang na ho
-    uvicorn.run("main:app", host="0.0.0.0", port=target_port, reload=False)
+    uvicorn.run("main:app", host="0.0.0.0", port=10000, reload=False)
     
